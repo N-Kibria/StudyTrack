@@ -1,15 +1,15 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
+
+
 // Create a new study session
 exports.addSession = async (req, res) => {
   try {
     const { subject_id, duration, date } = req.body;
     const userId = req.session.userId;
 
-    // Log both values to confirm they are present
-    console.log("User ID:", userId);
-    console.log("Subject ID:", subject_id);
+  
 
     if (!userId || !subject_id) {
       return res.status(400).send("User ID or Subject ID is missing.");
@@ -36,32 +36,30 @@ exports.addSession = async (req, res) => {
 };
 
 
-// Get all sessions (with optional filters)
 exports.getSessions = async (req, res) => {
   try {
-    const { subject, date } = req.query;
     const userId = req.session.userId;
 
-    // Ensure userId is provided to restrict data to the logged-in user
     if (!userId) {
       return res.status(401).send("Unauthorized. Please log in.");
     }
 
-    // Filter sessions by subject and date if provided
     const sessions = await prisma.session.findMany({
       where: {
-        userId, // Filter by userId to restrict sessions to the logged-in user
-        ...(subject && { subjectId: subject }),
-        ...(date && { date: new Date(date) }),
+        userId: userId, // Explicitly convert to ObjectId
       },
-      include: { subject: true }, // Include subject details if needed
+      include: { subject: true },
     });
+
     res.json(sessions);
   } catch (error) {
-    console.error("Error retrieving sessions:", error);
+    console.error("Detailed Error:", error);
     res.status(500).send("Error retrieving sessions");
   }
 };
+
+
+
 
 // Get a single session by ID (for editing)
 exports.getSessionById = async (req, res) => {

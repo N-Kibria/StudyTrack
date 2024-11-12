@@ -4,7 +4,10 @@ const router = express.Router();
 const subjectController = require('../controller/subject.controller');
 
 // Display subjects list
-router.get('/subjects', subjectController.getSubjects);
+router.get('/subject', subjectController.getSubjects);
+router.get('/subjects',  (req, res) => {
+  res.sendFile(path.join(__dirname, '../htmls/subjects.html'));
+});
 
 // Add subject
 router.get('/subjects/add', (req, res) => {
@@ -16,7 +19,8 @@ router.post('/subjects/add', subjectController.addSubject);
 router.get('/subjects/edit/:id', (req, res) => {
   res.sendFile(path.join(__dirname, '../htmls/editSubject.html'));
 });
-router.post('/subjects/edit/:id', subjectController.updateSubject);
+router.post('/subject/update', subjectController.updateSubject);
+
 
 // Delete subject
 router.post('/subjects/delete/:id', subjectController.deleteSubject);

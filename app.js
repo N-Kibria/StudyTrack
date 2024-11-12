@@ -15,7 +15,7 @@ const sessionRoutes =require('./routes/session.routes')
 
 
 function ensureAuthenticated(req, res, next) {
-  const publicPaths = ['/', '/login', '/register']; // Added '/register' here
+  const publicPaths = ['/', '/login', '/register'];
   if (publicPaths.includes(req.path) || req.session.isAuthenticated) {
       return next();
   }

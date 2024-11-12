@@ -1,22 +1,35 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-// Get all subjects
+
 exports.getSubjects = async (req, res) => {
   try {
-    const subjects = await prisma.subject.findMany();
-    res.json(subjects);
+    const userId = req.session.userId; 
+
+   
+    if (!userId) {
+      return res.status(401).send("Unauthorized. Please log in.");
+    }
+
+
+    const subjects = await prisma.subject.findMany({
+      where: {
+        userId: userId, 
+      },
+    });
+
+    res.json(subjects); 
   } catch (error) {
     console.error('Error retrieving subjects:', error);
     res.status(500).send("Error retrieving subjects");
   }
 };
 
-// Add a new subject
+
 exports.addSubject = async (req, res) => {
   try {
     const { name } = req.body;
-    const userId = req.session.userId; // Fetch userId from the session
+    const userId = req.session.userId; 
 
     if (!userId) {
       return res.status(401).json({ error: 'User not authenticated' });
@@ -28,31 +41,59 @@ exports.addSubject = async (req, res) => {
         userId: userId,
       },
     });
-    res.json({ success: true, redirectUrl: '/subjects' });
+    res.redirect('/subjects'); 
+   
   } catch (error) {
     console.error('Error adding subject:', error);
     res.status(500).json({ error: 'Error adding subject' });
   }
 };
 
-// Update an existing subject
+
 exports.updateSubject = async (req, res) => {
   try {
-    const { name } = req.body;
-    const subjectId = req.params.id;
+    const userId = req.session.userId;
+    const { name, subjectId } = req.body;
+    console.log('userID:', userId);
+    console.log('name:', name);
+    console.log('subjectID:', subjectId);
+    // Check that userId, new name, and subjectId are provided
+    if (!userId || !name || !subjectId) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
 
-    const updatedSubject = await prisma.subject.update({
-      where: { id: subjectId },
-      data: { name: name },
+    // Check if a subject with the new name already exists for this user
+    const existingSubject = await prisma.subject.findFirst({
+      where: {
+        userId: userId,
+        name: name,
+        NOT: { id: subjectId }, // Exclude the current subject from the check
+      },
     });
-    res.json({ success: true, redirectUrl: '/subjects' });
+
+    if (existingSubject) {
+      return res.status(400).json({ error: "A subject with this name already exists" });
+    }
+
+    // Update the subject's name
+    const updatedSubject = await prisma.subject.update({
+      where: {
+        id: subjectId, // Use the subjectId as the unique identifier for updating
+      },
+      data: {
+        name: name,
+      },
+    });
+
+    res.redirect('/subjects');
   } catch (error) {
     console.error('Error updating subject:', error);
     res.status(500).json({ error: 'Error updating subject' });
   }
 };
 
-// Delete a subject
+
+
 exports.deleteSubject = async (req, res) => {
   try {
     const subjectId = req.params.id;
@@ -60,7 +101,7 @@ exports.deleteSubject = async (req, res) => {
     await prisma.subject.delete({
       where: { id: subjectId },
     });
-    res.json({ success: true, redirectUrl: '/subjects' });
+    res.redirect('/subjects'); 
   } catch (error) {
     console.error('Error deleting subject:', error);
     res.status(500).json({ error: 'Error deleting subject' });

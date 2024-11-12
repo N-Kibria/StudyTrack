@@ -9,22 +9,39 @@
 <body>
   <div class="container">
     <h1>Edit Subject</h1>
-    <form action="/subjects/edit/{{id}}" method="POST">
-      <label for="name">Subject Name:</label>
+    <form id="editSubjectForm" method="POST" action="/subject/update">
+      <!-- Hidden field for subjectId -->
+      <input type="hidden" name="subjectId" id="subjectId">
+      <label for="name">New Subject Name:</label>
       <input type="text" id="name" name="name" required>
-      
-      <button type="submit" class="button">Save Changes</button>
+      <button type="submit" class="button save-button">Save Changes</button>
     </form>
   </div>
 
   <script>
-    // Fetch subject data for editing
-    fetch(`/subjects/${location.pathname.split('/').pop()}`)
-      .then(response => response.json())
-      .then(subject => {
-        document.getElementById('name').value = subject.name;
-        document.getElementById('totalStudyTime').value = subject.totalStudyTime;
-      });
+    // Retrieve the subjectId from the URL and populate the form
+   
+    document.getElementById("subject_name").addEventListener("blur", async function() {
+      const subjectName = this.value;
+
+      if (subjectName) {
+        try {
+          const response = await fetch(`/subject-id?name=${encodeURIComponent(subjectName)}`);
+          const data = await response.json();
+
+          if (response.ok) {
+            document.getElementById("subject_id").value = data.subjectId;
+          } else {
+            alert(data.error || "Subject not found");
+            document.getElementById("subject_id").value = ""; 
+          }
+        } catch (error) {
+          console.error("Error fetching subject ID:", error);
+          alert("An error occurred while fetching the subject ID.");
+        }
+      }
+    });
   </script>
+  
 </body>
 </html>

@@ -3,19 +3,23 @@ const path = require('path');
 const router = express.Router();
 const sessionController = require('../controller/session.controller');
 
-// Get all sessions
+// Route to fetch session data as JSON (API route)
 router.get('/session', sessionController.getSessions);
 
-// Add a new session (Display form)
+// Route to serve the session HTML page
+router.get('/sessions', (req, res) => {
+    res.sendFile(path.join(__dirname, '../htmls/session.html'));
+});
+
+// Route to serve the page for adding a new session
 router.get('/session/add', (req, res) =>
     res.sendFile(path.join(__dirname, '../htmls/addSession.html'))
 );
 
-// Endpoint to fetch subjectId by subject name
-// Endpoint to fetch subjectId by subject name and user ID
+// Route to get a subject ID by name for the logged-in user (API route)
 router.get('/subject-id', async (req, res) => {
     const { name } = req.query;
-    const userId = req.session.userId; // Assuming userId is stored in the session after login
+    const userId = req.session.userId;
 
     if (!userId || !name) {
         return res.status(400).json({ error: "Missing userId or subject name" });
@@ -24,7 +28,7 @@ router.get('/subject-id', async (req, res) => {
     try {
         const subject = await prisma.subject.findUnique({
             where: {
-                userId_name: { // Use the compound field notation
+                userId_name: {
                     userId: userId,
                     name: name,
                 },
@@ -42,20 +46,18 @@ router.get('/subject-id', async (req, res) => {
     }
 });
 
-
-
-// Process the form to add a new session
+// Route to add a new session (API route)
 router.post('/session/add', sessionController.addSession);
 
-// Edit an existing session (Display form)
+// Route to serve the page for editing a session
 router.get('/session/edit/:id', (req, res) =>
     res.sendFile(path.join(__dirname, '../htmls/editSession.html'))
 );
 
-// Process the form to update an existing session
+// Route to update a session (API route)
 router.post('/session/edit/:id', sessionController.updateSession);
 
-// Delete a session
+// Route to delete a session (API route)
 router.post('/session/delete/:id', sessionController.deleteSession);
 
 module.exports = router;

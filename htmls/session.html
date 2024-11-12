@@ -21,28 +21,30 @@
   </div>
 
   <script>
-    fetch('/sessions')
-      .then(response => response.json())
-      .then(sessions => {
-        const sessionList = document.getElementById('sessionList');
-        sessionList.innerHTML = sessions.map(session => `
-          <div class="session-item">
-            <h2>Subject: ${session.subject ? session.subject.name : 'Unknown'}</h2>
-            <p>Duration: ${session.duration} minutes</p>
-            <p>Date: ${new Date(session.date).toLocaleDateString()}</p>
-            <p>Notes: ${session.notes || 'No notes'}</p>
-            <a href="/sessions/edit/${session.id}" class="button">Edit</a>
-            <form action="/sessions/delete/${session.id}" method="POST" style="display:inline;">
-              <button type="submit" class="button delete-button">Delete</button>
-            </form>
-          </div>
-        `).join('');
-      })
-      .catch(error => {
-        console.error("Error fetching sessions:", error);
-        const sessionList = document.getElementById('sessionList');
-        sessionList.innerHTML = '<p>Error loading sessions. Please try again later.</p>';
-      });
+   fetch('/session')
+  .then(response => response.json())
+  .then(sessions => {
+    console.log("Fetched sessions:", sessions); 
+    const sessionList = document.getElementById('sessionList');
+    sessionList.innerHTML = sessions.map(session => `
+      <div class="session-item">
+        <h2>Subject: ${session.subject ? session.subject.name : 'Unknown'}</h2>
+        <p>Duration: ${session.duration} minutes</p>
+        <p>Date: ${new Date(session.date).toLocaleDateString()}</p>
+        <p>Notes: ${session.notes || 'No notes'}</p>
+        <a href="/sessions/edit/${session.id}" class="button">Edit</a>
+        <form action="/sessions/delete/${session.id}" method="POST" style="display:inline;">
+          <button type="submit" class="button delete-button">Delete</button>
+        </form>
+      </div>
+    `).join('');
+  })
+  .catch(error => {
+    console.error("Error fetching sessions:", error);
+    const sessionList = document.getElementById('sessionList');
+    sessionList.innerHTML = '<p>Error loading sessions. Please try again later.</p>';
+  });
+
   </script>
   
 </body>
