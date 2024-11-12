@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Subjects</title>
+  <link rel="stylesheet" href="/htmls/styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Subject Management</h1>
+    <a href="/subjects/add" class="button">Add New Subject</a>
+    <div id="subjectList">
+      <!-- JavaScript will populate this area with subjects -->
+    </div>
+  </div>
+
+  <script>
+    // Fetch subjects and display them
+    fetch('/subjects')
+      .then(response => response.json())
+      .then(subjects => {
+        const subjectList = document.getElementById('subjectList');
+        subjectList.innerHTML = subjects.map(subject => `
+          <div class="subject-item">
+            <h2>${subject.name}</h2>
+            <p>Total Study Time: ${subject.totalStudyTime} hours</p>
+            <a href="/subjects/edit/${subject.id}" class="button">Edit</a>
+            <form action="/subjects/delete/${subject.id}" method="POST">
+              <button type="submit" class="button delete-button">Delete</button>
+            </form>
+          </div>
+        `).join('');
+      });
+  </script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit Study Session</title>
+  <link rel="stylesheet" href="/htmls/styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Edit Study Session</h1>
+    <form action="/sessions/edit/{{id}}" method="POST">
+      <label for="duration">Duration (in minutes):</label>
+      <input type="number" id="duration" name="duration" required>
+
+      <label for="date">Date:</label>
+      <input type="date" id="date" name="date" required>
+
+     
+
+      <button type="submit" class="button">Save Changes</button>
+    </form>
+  </div>
+
+  <script>
+    fetch(`/sessions/${location.pathname.split('/').pop()}`)
+      .then(response => response.json())
+      .then(session => {
+        document.getElementById('duration').value = session.duration;
+        document.getElementById('date').value = session.date.split('T')[0];
+    
+      });
+  </script>
+</body>
+</html>

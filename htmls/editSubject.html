@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit Subject</title>
+  <link rel="stylesheet" href="/htmls/styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Edit Subject</h1>
+    <form action="/subjects/edit/{{id}}" method="POST">
+      <label for="name">Subject Name:</label>
+      <input type="text" id="name" name="name" required>
+      
+      <button type="submit" class="button">Save Changes</button>
+    </form>
+  </div>
+
+  <script>
+    // Fetch subject data for editing
+    fetch(`/subjects/${location.pathname.split('/').pop()}`)
+      .then(response => response.json())
+      .then(subject => {
+        document.getElementById('name').value = subject.name;
+        document.getElementById('totalStudyTime').value = subject.totalStudyTime;
+      });
+  </script>
+</body>
+</html>

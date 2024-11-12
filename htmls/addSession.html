@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Study Session</title>
+  <link rel="stylesheet" href="/htmls/styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Add New Study Session</h1>
+    <form action="/session/add" method="POST">
+      <label for="subject_name">Subject:</label>
+      <input type="text" id="subject_name" name="subject_name" required>
+
+      <!-- Hidden field to store subjectId -->
+      <input type="hidden" id="subject_id" name="subject_id">
+
+      <label for="duration">Duration (in minutes):</label>
+      <input type="number" id="duration" name="duration" required>
+
+      <label for="date">Date:</label>
+      <input type="date" id="date" name="date" required>
+
+      <button type="submit" class="button">Add Session</button>
+    </form>
+  </div>
+
+  <script>
+    document.getElementById("subject_name").addEventListener("blur", async function() {
+      const subjectName = this.value;
+
+      if (subjectName) {
+        try {
+          const response = await fetch(`/subject-id?name=${encodeURIComponent(subjectName)}`);
+          const data = await response.json();
+
+          if (response.ok) {
+            document.getElementById("subject_id").value = data.subjectId;
+          } else {
+            alert(data.error || "Subject not found");
+            document.getElementById("subject_id").value = ""; 
+          }
+        } catch (error) {
+          console.error("Error fetching subject ID:", error);
+          alert("An error occurred while fetching the subject ID.");
+        }
+      }
+    });
+  </script>
+</body>
+</html>
