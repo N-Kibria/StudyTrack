@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Generator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Upload a PDF or Text File to Generate Quiz</h1>
+        <form id="upload-form" enctype="multipart/form-data">
+            <input type="file" id="file" name="file" accept=".pdf,.txt" required />
+            <button type="submit">Upload File</button>
+        </form>
+        <div id="quiz-container"></div>
+    </div>
+    <script>
+        document.getElementById("upload-form").addEventListener("submit", async (event) => {
+            event.preventDefault();
+
+            const formData = new FormData();
+            formData.append("file", document.getElementById("file").files[0]);
+
+            const response = await fetch("/api/upload", {
+                method: "POST",
+                body: formData,
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                const quizContainer = document.getElementById("quiz-container");
+                quizContainer.innerHTML = "<h3>Generated Quiz:</h3>";
+
+                result.quiz.forEach((question, index) => {
+                    const questionElement = document.createElement("div");
+                    questionElement.innerHTML = `
+                        <p><strong>${index + 1}. ${question.question}</strong></p>
+                        ${question.options.map((option, i) => `<p><input type="radio" name="q${index}" value="${i}"> ${option}</p>`).join('')}
+                    `;
+                    quizContainer.appendChild(questionElement);
+                });
+            } else {
+                alert("Error: " + result.message);
+            }
+        });
+    </script>
+</body>
+</html>

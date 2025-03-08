@@ -76,8 +76,9 @@
   <div class="navbar">
     <button onclick="location.href='htmls/subjects.html'">Subjects</button>
     <button onclick="location.href='htmls/session.html'">Study Sessions</button>
-    <button onclick="location.href='/set-goals'">Set Goals</button>
-    <button onclick="location.href='/reports'">Reports</button>
+    <button onclick="location.href='htmls/discussion.html'">Discussion</button>
+    <button onclick="location.href='htmls/report.html'">Reports</button>
+    <button onclick="location.href='htmls/Quiz.html'">Quiz</button>
   </div>
 
   <div class="container">
@@ -87,12 +88,6 @@
     <div class="summary-card">
       <h2>Total Study Hours</h2>
       <p id="totalHours">Loading...</p>
-    </div>
-
-    <!-- Goals Progress -->
-    <div class="summary-card">
-      <h2>Goals Progress</h2>
-      <p id="goalsProgress">Loading...</p>
     </div>
 
     <!-- Recent Study Sessions -->
@@ -105,7 +100,41 @@
   </div>
 
   <script>
-    // JavaScript to fetch and display dashboard data will go here
+    // Fetch total study hours
+    async function fetchTotalHours() {
+      try {
+        const response = await fetch('/sessions/total-hours');
+        const data = await response.json();
+        document.getElementById('totalHours').textContent = `${data.totalHours} hours`;
+      } catch (error) {
+        console.error('Error fetching total hours:', error);
+        document.getElementById('totalHours').textContent = 'Error loading total hours';
+      }
+    }
+
+    // Fetch recent study sessions
+    async function fetchRecentSessions() {
+      try {
+        const response = await fetch('/sessions/recent');
+        const data = await response.json();
+        const recentSessions = document.getElementById('recentSessions');
+        recentSessions.innerHTML = data.sessions.map(session => `
+          <div class="session-item">
+            <strong>Subject:</strong> ${session.subjectName}<br>
+            <strong>Duration:</strong> ${session.duration} minutes<br>
+            <strong>Date:</strong> ${new Date(session.date).toLocaleDateString()}<br>
+            <strong>Notes:</strong> ${session.notes || 'No notes'}
+          </div>
+        `).join('');
+      } catch (error) {
+        console.error('Error fetching recent sessions:', error);
+        document.getElementById('recentSessions').textContent = 'Error loading recent sessions';
+      }
+    }
+
+   
+    fetchTotalHours();
+    fetchRecentSessions();
   </script>
 </body>
 </html>

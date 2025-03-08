@@ -17,21 +17,45 @@
 
   <script>
     // Fetch subjects and display them
-    fetch('/subject')
-      .then(response => response.json())
-      .then(subjects => {
-        const subjectList = document.getElementById('subjectList');
-        subjectList.innerHTML = subjects.map(subject => `
-          <div class="subject-item">
-            <h2>${subject.name}</h2>
-            <p>Total Study Time: ${subject.totalStudyTime} hours</p>
-            <a href="/subjects/edit/${subject.id}" class="button">Edit</a>
-            <form action="/subjects/delete/${subject.id}" method="POST">
-              <button type="submit" class="button delete-button">Delete</button>
-            </form>
-          </div>
-        `).join('');
-      });
+    async function fetchSubjects() {
+      const response = await fetch('/subject');
+      const subjects = await response.json();
+  
+      const subjectList = document.getElementById('subjectList');
+      subjectList.innerHTML = subjects.map(subject => `
+        <div class="subject-item">
+          <h2>${subject.name}</h2>
+          <p>Total Study Time: ${subject.totalStudyTime} hours</p>
+          <a href="/subjects/edit/${subject.id}" class="button">Edit</a>
+          <button class="button delete-button" onclick="deleteSubject('${subject.id}')">Delete</button>
+        </div>
+      `).join('');
+    }
+  
+    // Delete a subject
+    async function deleteSubject(subjectId) {
+      if (confirm('Are you sure you want to delete this subject?')) {
+        try {
+          const response = await fetch(`/subjects/${subjectId}`, {
+            method: 'DELETE',
+          });
+  
+          if (response.ok) {
+            alert('Subject deleted successfully!');
+            fetchSubjects(); // Refresh the subject list
+          } else {
+            alert('Failed to delete subject.');
+          }
+        } catch (error) {
+          console.error('Error deleting subject:', error);
+          alert('An error occurred while deleting the subject.');
+        }
+      }
+    }
+  
+    // Fetch subjects on page load
+    fetchSubjects();
   </script>
+  
 </body>
 </html>

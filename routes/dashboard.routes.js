@@ -4,6 +4,8 @@ const router = express.Router();
 const dashboardcontroller = require('../controller/dashboard.controller'); 
 
 
+router.get('/sessions/total-hours', dashboardcontroller.getTotalStudyHours);
+router.get('/sessions/recent', dashboardcontroller.getRecentSessions);
 
 
 

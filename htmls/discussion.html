@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Discussion Platform</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 20px;
+    }
+
+    h1,
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+
+    textarea {
+      width: 70%;
+      height: 40px;
+      margin-bottom: 10px;
+      padding: 10px;
+      font-size: 1em;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      resize: none;
+    }
+
+    button {
+      background-color: #4caf50;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1em;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    .discussion {
+      position: relative;
+      padding: 10px;
+      margin-bottom: 20px;
+      background-color: #fff;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    .add-comment-button {
+      position: absolute;
+      top: 10px;
+      right: 90px;
+      background-color: #4caf50;
+      color: white;
+      padding: 5px 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9em;
+    }
+
+    .delete-discussion-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: #4caf50;
+      color: white;
+      padding: 5px 10px;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 0.9em;
+    }
+
+    .delete-discussion-button:hover {
+      background-color:  #4caf50;
+    }
+
+    .comment {
+      position: relative;
+      margin-left: 20px;
+      margin-top: 10px;
+      padding: 10px 20px;
+      background-color: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    .comment::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -20px;
+      width: 20px;
+      height: 2px;
+      background-color: #ddd;
+    }
+
+    .comment::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -20px;
+      width: 2px;
+      height: 100%;
+      background-color: #ddd;
+    }
+
+    .comment:first-child::before {
+      display: none;
+    }
+
+    .comment:first-child::after {
+      height: 50%;
+    }
+
+    .reply-button {
+      margin-top: 5px;
+      font-size: 0.9em;
+      background-color: transparent;
+      color: #4caf50;
+      border: none;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    .reply-button:hover {
+      color: #45a049;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Discussion Platform</h1>
+
+  <!-- Form to Create Discussion -->
+  <div class="container">
+    <form id="createDiscussionForm">
+      <label for="content">Start a New Discussion:</label><br>
+      <textarea id="content" name="content" required></textarea><br>
+      <button type="submit">Create Discussion</button>
+    </form>
+
+    <hr>
+
+    <!-- Discussions List -->
+    <h2>Discussions</h2>
+    <div id="discussionList"></div>
+  </div>
+
+  <script>
+    // Fetch and render discussions with nested comments
+    async function fetchDiscussions() {
+      const response = await fetch('/discussions');
+      const data = await response.json();
+      const discussionList = document.getElementById('discussionList');
+      discussionList.innerHTML = '';
+
+      data.forEach(discussion => {
+        const discussionItem = document.createElement('div');
+        discussionItem.classList.add('discussion');
+        discussionItem.innerHTML = `
+          <div>
+            <strong>Discussion:</strong> ${discussion.comments[0]?.content || "No Content"}<br>
+            <em>Created by:</em> ${discussion.userEmail}
+            <button class="add-comment-button" onclick="showCommentForm('${discussion.id}')">Add Comment</button>
+            <button class="delete-discussion-button" onclick="deleteDiscussion('${discussion.id}')">Delete</button>
+            <div id="comments-${discussion.id}">
+              ${renderComments(discussion.comments)}
+            </div>
+          </div>
+        `;
+        discussionList.appendChild(discussionItem);
+      });
+    }
+
+    // Recursive function to render nested comments
+    function renderComments(comments) {
+      return comments
+        .map(
+          comment => `
+          <div class="comment">
+            <strong>${comment.createdByEmail}:</strong> ${comment.content}
+            <button class="reply-button" onclick="addReply('${comment.id}', '${comment.discussionId}')">Reply</button>
+            <div id="replies-${comment.id}">
+              ${renderComments(comment.replies || [])} <!-- Recursive rendering -->
+            </div>
+          </div>
+        `
+        )
+        .join('');
+    }
+
+    // Show form to add a comment
+    function showCommentForm(discussionId) {
+      const commentsList = document.getElementById(`comments-${discussionId}`);
+      commentsList.insertAdjacentHTML(
+        'beforeend',
+        `
+          <div class="comment">
+            <textarea id="new-comment-${discussionId}" required></textarea><br>
+            <button onclick="addComment('${discussionId}')">Submit Comment</button>
+          </div>
+        `
+      );
+    }
+
+    // Add a new comment
+    async function addComment(discussionId) {
+      const content = document.getElementById(`new-comment-${discussionId}`).value;
+      if (!content) return;
+
+      const response = await fetch(`/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content, discussionId }),
+      });
+
+      if (response.ok) {
+        fetchDiscussions();
+      }
+    }
+
+    // Add a new reply
+    async function addReply(parentId, discussionId) {
+      const content = prompt("Enter your reply:");
+      if (!content) return;
+
+      const response = await fetch(`/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content, discussionId, parentId }),
+      });
+
+      if (response.ok) {
+        fetchDiscussions();
+      }
+    }
+
+  
+    async function deleteDiscussion(discussionId) {
+  console.log("Attempting to delete discussion:", discussionId); // Debugging line
+
+  const response = await fetch(`/discussions/${discussionId}`, {
+    method: 'DELETE',
+  });
+
+  if (response.ok) {
+    console.log("Discussion deleted successfully"); // Debugging line
+    fetchDiscussions(); // Refresh discussions
+  } else {
+    console.error("Failed to delete discussion");
+  }
+}
+
+
+    document.getElementById('createDiscussionForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const content = document.getElementById('content').value;
+
+      const response = await fetch('/discussions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content })
+      });
+
+      if (response.ok) {
+        document.getElementById('content').value = '';
+        fetchDiscussions();
+      }
+    });
+
+    fetchDiscussions();
+  </script>
+</body>
+
+</html>

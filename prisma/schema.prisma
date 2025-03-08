@@ -8,21 +8,23 @@ generator client {
 }
 
 model User {
-  id       String    @id @default(auto()) @map("_id") @db.ObjectId
-  email    String    @unique
-  password String
-  subjects Subject[] @relation("UserSubjects") 
-  sessions Session[] @relation("UserSessions") 
+  id          String       @id @default(auto()) @map("_id") @db.ObjectId
+  email       String       @unique @db.String
+  password    String
+  subjects    Subject[]    @relation("UserSubjects") 
+  sessions    Session[]    @relation("UserSessions")
+  discussions Discussion[] @relation("UserDiscussions")
+  comments    Comment[]    @relation("UserComments")
 }
 
 model Subject {
-  id       String    @id @default(auto()) @map("_id") @db.ObjectId
+  id       String     @id @default(auto()) @map("_id") @db.ObjectId
   name     String
-  userId   String    @db.ObjectId
-  user     User      @relation("UserSubjects", fields: [userId], references: [id])
-  sessions Session[] @relation("SubjectSessions") 
+  userId   String     @db.ObjectId
+  user     User       @relation("UserSubjects", fields: [userId], references: [id])
+  sessions Session[]  @relation("SubjectSessions")
 
-  @@unique([userId, name]) 
+  @@unique([userId, name])
 }
 
 model Session {
@@ -31,7 +33,40 @@ model Session {
   userId    String   @db.ObjectId
   duration  Int
   date      DateTime @default(now())
+  notes     Note[]   
 
   subject Subject @relation("SubjectSessions", fields: [subjectId], references: [id])
   user    User    @relation("UserSessions", fields: [userId], references: [id])
+}
+
+model Note {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  content       String
+  singleImage   String?
+  multipleImages String[]
+  audio         String?
+  sessionId     String   @db.ObjectId
+  session       Session  @relation(fields: [sessionId], references: [id])
+}
+
+
+model Comment {
+  id             String     @id @default(auto()) @map("_id") @db.ObjectId
+  discussionId   String     @db.ObjectId
+  parentId       String?    @db.ObjectId
+  content        String
+  createdByEmail String     @db.String
+  createdBy      User       @relation("UserComments", fields: [createdByEmail], references: [email])
+  discussion     Discussion @relation("DiscussionComments", fields: [discussionId], references: [id], onDelete: Cascade)
+  replies        Comment[]  @relation("CommentReplies") 
+  parent         Comment?   @relation("CommentReplies", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction) // Explicit NoAction
+  date           DateTime   @default(now())
+}
+
+model Discussion {
+  id           String      @id @default(auto()) @map("_id") @db.ObjectId
+  userEmail    String      @db.String
+  user         User        @relation("UserDiscussions", fields: [userEmail], references: [email])
+  comments     Comment[]   @relation("DiscussionComments") 
+  date         DateTime    @default(now())
 }

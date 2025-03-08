@@ -1,0 +1,14 @@
+Characteristics of Complete Graph:
+The main characteristics of a complete graph are:
+
+Connectedness: A complete graph is a connected graph, which means that there exists a path between any two vertices in the graph.
+Count of edges: Every vertex in a complete graph has a degree (n-1), where n is the number of vertices in the graph. So total edges are n*(n-1)/2.
+Symmetry: Every edge in a complete graph is symmetric with each other, meaning that it is un-directed and connects two vertices in the same way.
+Transitivity: A complete graph is a transitive graph, which means that if vertex A is connected to vertex B and vertex B is connected to vertex C, then vertex A is also connected to vertex C.
+Regularity: A complete graph is a regular graph, meaning that every vertex has the same degree.
+How to Identify Complete Graph?
+To identify a complete graph, you need to check if every vertex in the graph is connected to every other vertex. Here are two methods for identifying a complete graph:
+
+Check the degree of each vertex: In a complete graph with n vertices, every vertex has degree n-1. So, if you can determine that every vertex in the graph has degree n-1, then the graph is a complete graph.
+Check the number of edges: A complete graph with n vertices has n*(n-1)/2 edges. So, if you can count the number of edges in the graph and verify that it has n*(n-1)/2 edges, then the graph is a complete graph.
+Note: These methods are effective if it s ensured that the graph does not have any cycle.

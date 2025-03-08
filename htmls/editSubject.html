@@ -9,9 +9,8 @@
 <body>
   <div class="container">
     <h1>Edit Subject</h1>
-    <form id="editSubjectForm" method="POST" action="/subject/update">
-      <!-- Hidden field for subjectId -->
-      <input type="hidden" name="subjectId" id="subjectId">
+    <form id="editSubjectForm">
+      <input type="hidden" id="subjectId">
       <label for="name">New Subject Name:</label>
       <input type="text" id="name" name="name" required>
       <button type="submit" class="button save-button">Save Changes</button>
@@ -19,29 +18,61 @@
   </div>
 
   <script>
-    // Retrieve the subjectId from the URL and populate the form
-   
-    document.getElementById("subject_name").addEventListener("blur", async function() {
-      const subjectName = this.value;
+    document.addEventListener('DOMContentLoaded', async () => {
+      const subjectId = window.location.pathname.split('/').pop();
+      const subjectName = new URLSearchParams(window.location.search).get('name');
+
+      if (!subjectId) {
+        alert('Subject ID is missing!');
+        return;
+      }
+
+      document.getElementById('subjectId').value = subjectId;
 
       if (subjectName) {
+        document.getElementById('name').value = decodeURIComponent(subjectName);
+      } else {
         try {
-          const response = await fetch(`/subject-id?name=${encodeURIComponent(subjectName)}`);
-          const data = await response.json();
-
+          const response = await fetch(`/subject/${subjectId}`);
           if (response.ok) {
-            document.getElementById("subject_id").value = data.subjectId;
+            const subject = await response.json();
+            document.getElementById('name').value = subject.name;
           } else {
-            alert(data.error || "Subject not found");
-            document.getElementById("subject_id").value = ""; 
+            alert('Failed to fetch subject details.');
           }
-        } catch (error) {
-          console.error("Error fetching subject ID:", error);
-          alert("An error occurred while fetching the subject ID.");
+        } catch {
+          alert('An error occurred while fetching subject details.');
         }
       }
+
+      document.getElementById('editSubjectForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const name = document.getElementById('name').value;
+
+        if (!name) {
+          alert('Subject name is required!');
+          return;
+        }
+
+        try {
+          const response = await fetch(`/subject/update`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ subjectId, name }),
+          });
+
+          if (response.ok) {
+            
+            window.location.href = '/subjects';
+          } else {
+            const errorData = await response.json();
+            
+          }
+        } catch {
+          alert('An error occurred while updating the subject.');
+        }
+      });
     });
   </script>
-  
 </body>
 </html>

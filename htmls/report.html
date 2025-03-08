@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Report</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        .filters {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .filters button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            border: none;
+            background-color: #4caf50;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .filters button:hover {
+            background-color: #45a049;
+        }
+
+        .summary-card {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 400px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Study Report</h1>
+        <div class="filters">
+            <button onclick="generateReport('weekly')">Weekly Report</button>
+            <button onclick="generateReport('monthly')">Monthly Report</button>
+        </div>
+        <div class="summary-card">
+            <h2>Total Study Hours: <span id="totalHours">Loading...</span></h2>
+        </div>
+        <div class="summary-card">
+            <h2>Recent Sessions</h2>
+            <div id="recentSessions">Loading...</div>
+        </div>
+        <div class="summary-card">
+            <h2>Subjects Created</h2>
+            <div id="recentSubjects">Loading...</div>
+        </div>
+        <div class="summary-card">
+            <h2>Time Spent per Subject</h2>
+            <div class="chart-container">
+                <canvas id="subjectChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <script>
+        let subjectChart; // Variable to hold the chart instance
+
+        async function generateReport(period) {
+            try {
+                // Fetch the main report data
+                const reportResponse = await fetch(`/report/${period}`);
+                if (!reportResponse.ok) {
+                    throw new Error("Failed to fetch report");
+                }
+                const data = await reportResponse.json();
+
+                // Update total hours
+                document.getElementById('totalHours').textContent = `${data.totalHours.toFixed(2)} hours`;
+
+                // Update recent sessions
+                const sessionsDiv = document.getElementById('recentSessions');
+                sessionsDiv.innerHTML = data.sessions.map(session => `
+            <p>
+                <strong>Subject:</strong> ${session.subjectName}<br>
+                <strong>Duration:</strong> ${session.duration} minutes<br>
+                <strong>Date:</strong> ${new Date(session.date).toLocaleDateString()}<br>
+                <strong>Notes:</strong> ${session.notes || 'No notes'}
+            </p>
+        `).join('');
+
+                // Update recent subjects
+                const subjectsDiv = document.getElementById('recentSubjects');
+                subjectsDiv.innerHTML = data.subjects.map(subject => `
+            <p>
+                <strong>${subject.name}</strong> (Created on: ${subject.oldestSessionDate
+                        ? new Date(subject.oldestSessionDate).toLocaleDateString()
+                        : 'No sessions available'
+                    })
+            </p>
+        `).join('');
+
+                // Fetch and update the pie chart
+                const chartResponse = await fetch(`/report/${period}/subject-distribution`);
+                if (!chartResponse.ok) {
+                    throw new Error("Failed to fetch subject distribution");
+                }
+                const chartData = await chartResponse.json();
+
+                // Destroy the existing chart instance if it exists
+                if (subjectChart) {
+                    subjectChart.destroy();
+                }
+
+                // Create a new chart instance
+                const ctx = document.getElementById('subjectChart').getContext('2d');
+                subjectChart = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: chartData.subjectTimeDistribution.map(item => item.subjectName),
+                        datasets: [{
+                            data: chartData.subjectTimeDistribution.map(item => item.totalTime),
+                            backgroundColor: ['#4caf50', '#2196f3', '#ff9800', '#9c27b0', '#f44336'],
+                        }],
+                    },
+                });
+            } catch (error) {
+                console.error("Error generating report:", error);
+            }
+        }
+
+
+
+    </script>
+
+</body>
+
+</html>

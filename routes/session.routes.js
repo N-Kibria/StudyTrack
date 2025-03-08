@@ -2,21 +2,51 @@ const express = require('express');
 const path = require('path');
 const router = express.Router();
 const sessionController = require('../controller/session.controller');
+const { uploadImage, uploadAudioFile } = require("../utils/multer");
 
-// Route to fetch session data as JSON (API route)
+
+router.post("/upload-single-image", uploadImage.single("uploadSingleImage"), (req, res) => {
+
+
+  if (!req.file) {
+    return res.status(400).json({ error: "No file uploaded!" });
+  }
+  res.json({ filename: req.file.filename, message: "Single image uploaded successfully!" });
+});
+
+router.post("/upload-multiple-images", uploadImage.array("uploadMultipleImages", 5), (req, res) => {
+  if (!req.files || req.files.length === 0) {
+    return res.status(400).json({ error: "No files uploaded!" });
+  }
+  const filenames = req.files.map((file) => file.filename);
+  res.json({ filenames, message: "Multiple images uploaded successfully!" });
+});
+
+router.post("/upload-audio", uploadAudioFile.single("uploadAudio"), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: "No file uploaded!" });
+  }
+  res.json({ filename: req.file.filename, message: "Audio uploaded successfully!" });
+});
+
+
+ 
+router.delete('/session/:id', sessionController.deleteSession);
+router.get('/session/:id', sessionController.getSessionById);
+
+
 router.get('/session', sessionController.getSessions);
 
-// Route to serve the session HTML page
+
 router.get('/sessions', (req, res) => {
     res.sendFile(path.join(__dirname, '../htmls/session.html'));
 });
 
-// Route to serve the page for adding a new session
 router.get('/session/add', (req, res) =>
     res.sendFile(path.join(__dirname, '../htmls/addSession.html'))
 );
 
-// Route to get a subject ID by name for the logged-in user (API route)
+
 router.get('/subject-id', async (req, res) => {
     const { name } = req.query;
     const userId = req.session.userId;
@@ -46,18 +76,8 @@ router.get('/subject-id', async (req, res) => {
     }
 });
 
-// Route to add a new session (API route)
+
 router.post('/session/add', sessionController.addSession);
 
-// Route to serve the page for editing a session
-router.get('/session/edit/:id', (req, res) =>
-    res.sendFile(path.join(__dirname, '../htmls/editSession.html'))
-);
-
-// Route to update a session (API route)
-router.post('/session/edit/:id', sessionController.updateSession);
-
-// Route to delete a session (API route)
-router.post('/session/delete/:id', sessionController.deleteSession);
 
 module.exports = router;
