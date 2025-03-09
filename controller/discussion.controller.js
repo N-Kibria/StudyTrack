@@ -4,7 +4,7 @@ const prisma = new PrismaClient();
 const createDiscussion = async (req, res) => {
   const { content } = req.body;
 
-  const userEmail  = req.session?.passport?.user; 
+  const userEmail  = req.session?.email; 
 
   if (!content || !userEmail) {
     return res.status(400).json({ error: "Content or User email missing" });
@@ -119,7 +119,7 @@ const getDiscussions = async (req, res) => {
 const createComment = async (req, res) => {
   const { content, discussionId, parentId } = req.body;
 
-  const userEmail  = req.session?.passport?.user; 
+  const userEmail  = req.session?.email; 
 
 
   if (!content || !discussionId || !userEmail) {
