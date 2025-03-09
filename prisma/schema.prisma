@@ -10,7 +10,7 @@ generator client {
 model User {
   id          String       @id @default(auto()) @map("_id") @db.ObjectId
   email       String       @unique @db.String
-  password    String
+  password    String?
   subjects    Subject[]    @relation("UserSubjects") 
   sessions    Session[]    @relation("UserSessions")
   discussions Discussion[] @relation("UserDiscussions")
@@ -28,25 +28,18 @@ model Subject {
 }
 
 model Session {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  subjectId String   @db.ObjectId
-  userId    String   @db.ObjectId
-  duration  Int
-  date      DateTime @default(now())
-  notes     Note[]   
-
-  subject Subject @relation("SubjectSessions", fields: [subjectId], references: [id])
-  user    User    @relation("UserSessions", fields: [userId], references: [id])
-}
-
-model Note {
   id            String   @id @default(auto()) @map("_id") @db.ObjectId
-  content       String
-  singleImage   String?
-  multipleImages String[]
-  audio         String?
-  sessionId     String   @db.ObjectId
-  session       Session  @relation(fields: [sessionId], references: [id])
+  subjectId     String   @db.ObjectId
+  userId        String   @db.ObjectId
+  duration      Int
+  date          DateTime @default(now())
+ 
+  singleImage   String?  
+  multipleImages String[] 
+  audio         String?  
+
+  subject       Subject  @relation("SubjectSessions", fields: [subjectId], references: [id])
+  user          User     @relation("UserSessions", fields: [userId], references: [id])
 }
 
 
