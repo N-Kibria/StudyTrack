@@ -1,23 +1,25 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
-const path = require('path');  // Import the 'path' module
-
+const path = require('path');  // For managing file paths
 
 exports.addSession = async (req, res) => {
   try {
     const { subject_id, duration, date } = req.body;
     const userId = req.session.userId;
 
-  
+    
+    const singleImage = req.file ? req.file.filename : null;  
+    const multipleImages = req.files ? req.files.map(file => file.filename) : []; 
+    const audio = req.audioFile ? req.audioFile.filename : null; 
 
-    if ( !subject_id) {
-      return res.status(400).send(" Subject ID is missing.");
+    if (!subject_id) {
+      return res.status(400).send("Subject ID is missing.");
     }
     if (!userId) {
-      return res.status(400).send("User ID  is missing.");
+      return res.status(400).send("User ID is missing.");
     }
 
-    await prisma.session.create({
+    const session = await prisma.session.create({
       data: {
         subject: {
           connect: { id: subject_id },
@@ -27,6 +29,9 @@ exports.addSession = async (req, res) => {
         },
         duration: parseInt(duration),
         date: new Date(date),
+        singleImage,
+        multipleImages,
+        audio,
       },
     });
 
@@ -36,7 +41,6 @@ exports.addSession = async (req, res) => {
     res.status(500).send("Error adding session");
   }
 };
-
 
 
 exports.getSessions = async (req, res) => {

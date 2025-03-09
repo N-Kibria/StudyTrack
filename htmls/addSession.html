@@ -6,7 +6,7 @@
   <title>Add Study Session</title>
   <link rel="stylesheet" href="/htmls/styles.css">
   <style>
-    /* Add custom styles */
+
     body {
       font-family: Arial, sans-serif;
     }
@@ -70,38 +70,33 @@
 <body>
   <div class="container">
     <h1>Add New Study Session</h1>
-    <form action="/session/add" method="POST" id="addSessionForm">
+    <form action="/session/add" method="POST" id="addSessionForm" enctype="multipart/form-data">
       <label for="subject_name">Subject:</label>
       <input type="text" id="subject_name" name="subject_name" required>
-
+    
       <input type="hidden" id="subject_id" name="subject_id">
-
+    
       <label for="duration">Duration (in minutes):</label>
       <input type="number" id="duration" name="duration" required>
-
+    
       <label for="date">Date:</label>
       <input type="date" id="date" name="date" required>
-    </form>
-
-    <h2>Upload Files</h2>
-    <div>
-      <!-- Add Image -->
+    
+     
       <label for="uploadSingleImage">Upload Single Image:</label>
       <input type="file" id="uploadSingleImage" accept="image/*">
-
-      <!-- Add Multiple Images -->
+    
+    
       <label for="uploadMultipleImages">Upload Multiple Images:</label>
       <input type="file" id="uploadMultipleImages" accept="image/*" multiple>
+    
 
-      <!-- Add Audio -->
       <label for="uploadAudio">Upload Audio:</label>
       <input type="file" id="uploadAudio" accept="audio/*">
-      
-      <div id="filePreviews"></div>
-    </div>
-
-    <button id="addSessionButton" class="button bottom-button">Add Session</button>
-  </div>
+    
+      <button id="addSessionButton" class="button bottom-button">Add Session</button>
+    </form>
+    
  
   <script>
     document.getElementById("subject_name").addEventListener("blur", async function() {
@@ -131,7 +126,7 @@
       
       if (files.length === 0) {
         console.log(`${fileInputId} has no files to upload.`);
-        return; // No file to upload, skip
+        return; 
       }
 
       const formData = new FormData();
@@ -159,16 +154,14 @@
       }
     }
 
-    // Add Event Listener to Add Session Button
     document.getElementById("addSessionButton").addEventListener("click", async (e) => {
       e.preventDefault();
 
-      // Upload Files Before Submitting Form
+     
       await uploadFile("/upload-single-image", "uploadSingleImage");
       await uploadFile("/upload-multiple-images", "uploadMultipleImages");
       await uploadFile("/upload-audio", "uploadAudio");
 
-      // Submit the Form After File Uploads
       document.getElementById("addSessionForm").submit();
     });
   </script>

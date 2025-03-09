@@ -1,7 +1,7 @@
 const multer = require("multer");
 const path = require("path");
 
-// Storage for images
+
 const imageStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, path.join(__dirname, "../uploads/images"));
@@ -11,7 +11,7 @@ const imageStorage = multer.diskStorage({
   },
 });
 
-// Storage for audio
+
 const audioStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, path.join(__dirname, "../uploads/audio"));
@@ -21,7 +21,7 @@ const audioStorage = multer.diskStorage({
   },
 });
 
-// File filters
+
 const imageFileFilter = (req, file, cb) => {
   const allowedTypes = ["image/jpeg", "image/png", "image/gif"];
   if (allowedTypes.includes(file.mimetype)) {

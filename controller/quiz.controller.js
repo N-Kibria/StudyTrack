@@ -22,7 +22,7 @@ const extractTextFromPDF = async (filePath) => {
 
 // Function to generate quiz questions using OpenAI
 const generateQuiz = async (text) => {
-    const trimmedText = text.slice(0, 1000); // Limit prompt size to 1000 characters
+    const trimmedText = text.slice(0, 1000); 
     const prompt = `Generate 5 multiple-choice questions based on the following text:\n${trimmedText}`;
 
     try {

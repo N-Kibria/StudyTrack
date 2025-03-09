@@ -84,13 +84,13 @@
   <div class="container">
     <h1>Study Dashboard</h1>
 
-    <!-- Total Study Hours -->
+   
     <div class="summary-card">
       <h2>Total Study Hours</h2>
       <p id="totalHours">Loading...</p>
     </div>
 
-    <!-- Recent Study Sessions -->
+    
     <div class="summary-card recent-sessions">
       <h2>Recent Study Sessions</h2>
       <div id="recentSessions">
@@ -100,7 +100,7 @@
   </div>
 
   <script>
-    // Fetch total study hours
+    
     async function fetchTotalHours() {
       try {
         const response = await fetch('/sessions/total-hours');
@@ -112,7 +112,7 @@
       }
     }
 
-    // Fetch recent study sessions
+   
     async function fetchRecentSessions() {
       try {
         const response = await fetch('/sessions/recent');
