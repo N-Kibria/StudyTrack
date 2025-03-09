@@ -6,10 +6,11 @@ exports.getdashboard = (req, res) => {
     res.sendFile(path.join(__dirname, '../htmls/dashboard.html'));
 };
 
-// Total study hours
+
 exports.getTotalStudyHours = async (req, res) => {
     try {
-        const userId = req.session.userId; // Ensure session is working
+        const userId = req.session?.userId; 
+
 
         if (!userId) {
             return res.status(401).json({ error: 'Unauthorized' });
@@ -20,7 +21,7 @@ exports.getTotalStudyHours = async (req, res) => {
             where: { userId },
         });
 
-        const totalHours = (totalMinutes._sum.duration || 0) / 60; // Convert minutes to hours
+        const totalHours = (totalMinutes._sum.duration || 0) / 60; 
         res.json({ totalHours: totalHours.toFixed(2) });
     } catch (error) {
         console.error('Error calculating total study hours:', error);
@@ -30,7 +31,7 @@ exports.getTotalStudyHours = async (req, res) => {
 
 exports.getRecentSessions = async (req, res) => {
     try {
-        const userId = req.session.userId;
+        const userId = req.session?.userId; 
 
         if (!userId) {
             return res.status(401).json({ error: 'Unauthorized' });
@@ -38,9 +39,9 @@ exports.getRecentSessions = async (req, res) => {
 
         const sessions = await prisma.session.findMany({
             where: { userId },
-            include: { subject: true }, // Fetch related subject
+            include: { subject: true }, 
             orderBy: { date: 'desc' },
-            take: 5, // Limit to 5 recent sessions
+            take: 5, 
         });
 
         const formattedSessions = sessions.map(session => ({

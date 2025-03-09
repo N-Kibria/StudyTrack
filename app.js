@@ -4,6 +4,7 @@ const path = require('path');
 const session = require('express-session');
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const GitHubStrategy = require("passport-github2").Strategy;
 const LocalStrategy = require('passport-local').Strategy; 
 const fileUpload = require("express-fileupload");
 require('dotenv').config();
@@ -25,7 +26,7 @@ const reportRoutes= require('./routes/report.routes')
 const quizRoutes = require("./routes/quiz.routes");
 
 function ensureAuthenticated(req, res, next) {
-  const publicPaths = ['/', '/login', '/register','/auth/google','/auth/google/callback'];
+  const publicPaths = ['/', '/login', '/register','/auth/google','/auth/google/callback','/auth/github','/auth/github/callback'];
   if (publicPaths.includes(req.path) || req.session.isAuthenticated) {
       return next();
   }
@@ -101,23 +102,63 @@ passport.use(new LocalStrategy({
   }
 ));
 
+passport.use(new GitHubStrategy(
+  {
+    clientID: process.env.GITHUB_CLIENT_ID,
+    clientSecret: process.env.GITHUB_CLIENT_SECRET,
+    callbackURL: "http://localhost:3001/auth/github/callback",
+    scope: ['user:email']
+  },
+  async(accessToken, refreshToken, profile, done) => {
+    try {
+
+      if (!profile.emails || profile.emails.length === 0) {
+        return done(new Error("GitHub profile doesn't have an email."));
+      }
+
+      const user = await db.user.findUnique({
+        where: { email: profile.emails[0].value }
+      });
+  
+      if (!user) {
+      
+        const newUser = await db.user.create({
+          data: {
+            email: profile.emails[0].value,
+            password: null, 
+          }
+        });
+  
+        newUser.isNewUser = true; 
+        return done(null, newUser);
+      }
+  
+      return done(null, user);
+    } catch (err) {
+      return done(err, null);
+    }
+  }
+)
+);
 
 passport.serializeUser((user, done) => {
-  console.log("Serializing user:", user); 
-  done(null, user.email); 
+  console.log("Serializing user:", user);
+  done(null, { email: user.email, id: user.id }); 
 });
 
-passport.deserializeUser(async (email, done) => {
-  console.log("Deserializing email:", email); 
+passport.deserializeUser(async (userData, done) => {
+  console.log("Deserializing user:", userData);
   try {
-    const user = await db.user.findUnique({ where: { email } });
-    console.log("Deserialized user:", user); 
+    
+    const user = await db.user.findUnique({ where: { email: userData.email } });
+    console.log("Deserialized user:", user);
     done(null, user);
   } catch (err) {
     console.error("Error deserializing user:", err);
     done(err, null);
   }
 });
+
 
 app.get('/auth/google',
   passport.authenticate('google', { scope: ['profile', 'email'] })
@@ -127,10 +168,11 @@ app.get('/auth/google/callback',
   passport.authenticate('google', { failureRedirect: '/login' }),
   (req, res) => {
     if (req.user) {
-      req.session.isAuthenticated = true;
-
+      req.session.userId = req.user.id; 
+    req.session.email = req.user.email; 
+    req.session.isAuthenticated = true; 
       if (req.user.isNewUser) {
-        res.redirect('/register'); 
+        res.redirect('/register');
       } else {
         res.redirect('/dashboard');
       }
@@ -139,6 +181,30 @@ app.get('/auth/google/callback',
     }
   }
 );
+
+
+app.get(
+  "/auth/github",
+  passport.authenticate("github", { scope: ["user:email"] })
+);
+
+app.get(
+  "/auth/github/callback",
+  passport.authenticate("github", { failureRedirect: "/login" }),
+  (req, res) => {
+      if (req.user) {
+        req.session.userId = req.user.id;  
+        req.session.email = req.user.email; 
+        req.session.isAuthenticated = true;
+        res.redirect('/dashboard');
+        
+      } else {
+        res.redirect('/login');
+      }
+    }
+);
+
+
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

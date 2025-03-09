@@ -1,10 +1,11 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-// Get all subjects with total study time
+
 exports.getSubjects = async (req, res) => {
   try {
-    const userId = req.session.userId;
+    const userId = req.session?.userId; 
+
 
     if (!userId) {
       return res.status(401).send("Unauthorized. Please log in.");
@@ -15,7 +16,7 @@ exports.getSubjects = async (req, res) => {
         userId: userId,
       },
       include: {
-        sessions: true, // Include sessions to calculate total study time
+        sessions: true, 
       },
     });
 
@@ -23,7 +24,7 @@ exports.getSubjects = async (req, res) => {
       const totalStudyTime = subject.sessions.reduce((sum, session) => sum + session.duration, 0);
       return {
         ...subject,
-        totalStudyTime: (totalStudyTime / 60).toFixed(2), // Convert minutes to hours
+        totalStudyTime: (totalStudyTime / 60).toFixed(2), 
       };
     });
 
@@ -34,7 +35,6 @@ exports.getSubjects = async (req, res) => {
   }
 };
 
-// Delete a subject and associated sessions
 exports.deleteSubject = async (req, res) => {
   try {
     const subjectId = req.params.id;
@@ -46,14 +46,13 @@ exports.deleteSubject = async (req, res) => {
       where: { subjectId },
     });
 
-    // Delete the subject
     await prisma.subject.delete({
       where: { id: subjectId },
     });
 
     res.status(200).json({ message: 'Subject deleted successfully' });
   } catch (error) {
-    console.error('Error deleting subject:', error); // Log the error
+    console.error('Error deleting subject:', error); 
     res.status(500).json({ error: 'Failed to delete subject' });
   }
 };
@@ -67,7 +66,7 @@ exports.deleteSubject = async (req, res) => {
 exports.addSubject = async (req, res) => {
   try {
     const { name } = req.body;
-    const userId = req.session.userId; 
+    const userId = req.session?.userId; 
 
     if (!userId) {
       return res.status(401).json({ error: 'User not authenticated' });
@@ -90,7 +89,7 @@ exports.addSubject = async (req, res) => {
 
 exports.updateSubject = async (req, res) => {
   try {
-    const userId = req.session.userId;
+    const userId = req.session?.userId; 
     const { name, subjectId } = req.body;
 
     if (!userId || !name || !subjectId) {

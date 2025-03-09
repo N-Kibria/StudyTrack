@@ -3,12 +3,12 @@ const pdfParse = require("pdf-parse");
 const path = require("path");
 const { OpenAI } = require("openai");
 
-// Initialize OpenAI API
+
 const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY, // Pass the API key directly
+    apiKey: process.env.OPENAI_API_KEY, 
 });
 
-// Function to extract text from PDF
+
 const extractTextFromPDF = async (filePath) => {
     try {
         const pdfData = fs.readFileSync(filePath);
@@ -20,7 +20,6 @@ const extractTextFromPDF = async (filePath) => {
     }
 };
 
-// Function to generate quiz questions using OpenAI
 const generateQuiz = async (text) => {
     const trimmedText = text.slice(0, 1000); 
     const prompt = `Generate 5 multiple-choice questions based on the following text:\n${trimmedText}`;
@@ -43,7 +42,7 @@ const generateQuiz = async (text) => {
     }
 };
 
-// Controller function for handling file upload
+
 const handleFileUpload = async (req, res) => {
     if (!req.files || !req.files.file) {
         return res.status(400).json({ success: false, message: "No file uploaded" });
@@ -51,7 +50,7 @@ const handleFileUpload = async (req, res) => {
 
     const file = req.files.file;
 
-    // Validate file extension
+    
     const validExtensions = [".pdf", ".txt"];
     const fileExtension = path.extname(file.name).toLowerCase();
 
@@ -62,7 +61,7 @@ const handleFileUpload = async (req, res) => {
     const filePath = path.join(__dirname, "../uploads/quiz", file.name);
 
     try {
-        // Save the uploaded file
+   
         await file.mv(filePath);
 
         let extractedText;
@@ -72,7 +71,7 @@ const handleFileUpload = async (req, res) => {
             extractedText = fs.readFileSync(filePath, "utf-8");
         }
 
-        // Generate quiz
+       
         const quiz = await generateQuiz(extractedText);
         res.json({ success: true, quiz });
     } catch (error) {

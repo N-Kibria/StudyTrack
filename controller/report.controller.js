@@ -3,8 +3,8 @@ const prisma = new PrismaClient();
 
 exports.getWeeklyReport = async (req, res) => {
     try {
-        const userId = req.session.userId;
-
+        const userId = req.session?.userId; 
+       
         if (!userId) {
             return res.status(401).json({ error: 'Unauthorized' });
         }
@@ -12,7 +12,7 @@ exports.getWeeklyReport = async (req, res) => {
         const pastWeekDate = new Date();
         pastWeekDate.setDate(pastWeekDate.getDate() - 7);
 
-        // Total study hours for the week
+       
         const totalMinutes = await prisma.session.aggregate({
             _sum: { duration: true },
             where: {
@@ -21,7 +21,7 @@ exports.getWeeklyReport = async (req, res) => {
             },
         });
 
-        // Recent sessions in the past week
+      
         const sessions = await prisma.session.findMany({
             where: {
                 userId,
@@ -31,19 +31,18 @@ exports.getWeeklyReport = async (req, res) => {
             orderBy: { date: 'desc' },
         });
 
-        // Subjects that have sessions created in the past week
         const subjectsWithRecentSessions = await prisma.subject.findMany({
             where: {
                 userId,
                 sessions: {
                     some: {
-                        date: { gte: pastWeekDate }, // Check if any session in the subject is in the past week
+                        date: { gte: pastWeekDate }, 
                     },
                 },
             },
             include: {
                 sessions: {
-                    orderBy: { date: 'asc' }, // Get the oldest session date
+                    orderBy: { date: 'asc' }, 
                     take: 1,
                 },
             },
@@ -51,10 +50,10 @@ exports.getWeeklyReport = async (req, res) => {
 
         const formattedSubjects = subjectsWithRecentSessions.map((subject) => ({
             name: subject.name,
-            oldestSessionDate: subject.sessions[0]?.date, // Use the oldest session date
+            oldestSessionDate: subject.sessions[0]?.date, 
         }));
 
-        // Pie chart data: Time spent per subject
+
         const subjectTimeDistribution = await prisma.session.groupBy({
             by: ['subjectId'],
             _sum: { duration: true },
@@ -71,20 +70,20 @@ exports.getWeeklyReport = async (req, res) => {
                 });
                 return {
                     subjectName: subject.name,
-                    totalTime: item._sum.duration / 60, // Convert minutes to hours
+                    totalTime: item._sum.duration / 60, 
                 };
             })
         );
 
         res.json({
-            totalHours: (totalMinutes._sum.duration || 0) / 60, // Convert minutes to hours
+            totalHours: (totalMinutes._sum.duration || 0) / 60, 
             sessions: sessions.map((session) => ({
                 subjectName: session.subject.name,
                 duration: session.duration,
                 date: session.date,
                 notes: session.notes,
             })),
-            subjects: formattedSubjects, // Include subjects with their oldest session date
+            subjects: formattedSubjects,
             subjectTimeDistribution: subjectData,
         });
     } catch (error) {
@@ -94,11 +93,10 @@ exports.getWeeklyReport = async (req, res) => {
 };
 
 
-// Monthly Report Logic
+
 exports.getMonthlyReport = async (req, res) => {
     try {
-        const userId = req.session.userId;
-
+        const userId = req.session?.userId; 
         if (!userId) {
             return res.status(401).json({ error: 'Unauthorized' });
         }
@@ -106,7 +104,6 @@ exports.getMonthlyReport = async (req, res) => {
         const pastMonthDate = new Date();
         pastMonthDate.setMonth(pastMonthDate.getMonth() - 1);
 
-        // Total study hours for the month
         const totalMinutes = await prisma.session.aggregate({
             _sum: { duration: true },
             where: {
@@ -115,7 +112,6 @@ exports.getMonthlyReport = async (req, res) => {
             },
         });
 
-        // Recent sessions in the past month
         const sessions = await prisma.session.findMany({
             where: {
                 userId,
@@ -125,19 +121,19 @@ exports.getMonthlyReport = async (req, res) => {
             orderBy: { date: 'desc' },
         });
 
-        // Subjects with their oldest session date in the past month
+       
         const subjectsWithRecentSessions = await prisma.subject.findMany({
             where: {
                 userId,
                 sessions: {
                     some: {
-                        date: { gte: pastMonthDate }, // Check if any session in the subject is in the past month
+                        date: { gte: pastMonthDate }, 
                     },
                 },
             },
             include: {
                 sessions: {
-                    orderBy: { date: 'asc' }, // Get the oldest session date
+                    orderBy: { date: 'asc' }, 
                     take: 1,
                 },
             },
@@ -145,10 +141,10 @@ exports.getMonthlyReport = async (req, res) => {
 
         const formattedSubjects = subjectsWithRecentSessions.map((subject) => ({
             name: subject.name,
-            oldestSessionDate: subject.sessions[0]?.date || null, // Use the oldest session date
+            oldestSessionDate: subject.sessions[0]?.date || null, 
         }));
 
-        // Pie chart data: Time spent per subject
+
         const subjectTimeDistribution = await prisma.session.groupBy({
             by: ['subjectId'],
             _sum: { duration: true },
@@ -165,20 +161,20 @@ exports.getMonthlyReport = async (req, res) => {
                 });
                 return {
                     subjectName: subject.name,
-                    totalTime: item._sum.duration / 60, // Convert minutes to hours
+                    totalTime: item._sum.duration / 60,
                 };
             })
         );
 
         res.json({
-            totalHours: (totalMinutes._sum.duration || 0) / 60, // Convert minutes to hours
+            totalHours: (totalMinutes._sum.duration || 0) / 60,
             sessions: sessions.map((session) => ({
                 subjectName: session.subject.name,
                 duration: session.duration,
                 date: session.date,
                 notes: session.notes,
             })),
-            subjects: formattedSubjects, // Include subjects with their oldest session date
+            subjects: formattedSubjects,
             subjectTimeDistribution: subjectData,
         });
     } catch (error) {
@@ -189,13 +185,13 @@ exports.getMonthlyReport = async (req, res) => {
 exports.getSubjectTimeDistribution = async (req, res) => {
     try {
         const { period } = req.params;
-        const userId = req.session.userId; // Assuming userId is stored in session
+        const userId = req.session?.userId;  
 
         if (!userId) {
             return res.status(401).json({ error: "Unauthorized" });
         }
 
-        // Define the start date based on the period
+     
         const now = new Date();
         let startDate;
         if (period === "weekly") {
@@ -206,21 +202,21 @@ exports.getSubjectTimeDistribution = async (req, res) => {
             return res.status(400).json({ error: "Invalid period" });
         }
 
-        // Fetch time spent per subject within the selected period
+ 
         const sessions = await prisma.session.groupBy({
             by: ["subjectId"],
             _sum: {
-                duration: true, // Total time spent
+                duration: true, 
             },
             where: {
                 userId,
                 date: {
-                    gte: startDate, // Filter sessions from the start date
+                    gte: startDate, 
                 },
             },
         });
 
-        // Fetch subject names for the grouped session data
+        
         const subjectData = await Promise.all(
             sessions.map(async (session) => {
                 const subject = await prisma.subject.findUnique({
@@ -228,7 +224,7 @@ exports.getSubjectTimeDistribution = async (req, res) => {
                 });
                 return {
                     subjectName: subject.name,
-                    totalTime: session._sum.duration || 0, // Total time for this subject
+                    totalTime: session._sum.duration || 0,
                 };
             })
         );

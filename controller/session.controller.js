@@ -1,11 +1,11 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
-const path = require('path');  // For managing file paths
+const path = require('path'); 
 
 exports.addSession = async (req, res) => {
   try {
     const { subject_id, duration, date } = req.body;
-    const userId = req.session.userId;
+    const userId = req.session?.userId; 
 
     
     const singleImage = req.file ? req.file.filename : null;  
@@ -45,7 +45,7 @@ exports.addSession = async (req, res) => {
 
 exports.getSessions = async (req, res) => {
   try {
-    const userId = req.session.userId;
+    const userId = req.session?.userId; 
 
     if (!userId) {
       return res.status(401).send("Unauthorized. Please log in.");
@@ -53,7 +53,7 @@ exports.getSessions = async (req, res) => {
 
     const sessions = await prisma.session.findMany({
       where: {
-        userId: userId, // Explicitly convert to ObjectId
+        userId: userId, 
       },
       include: { subject: true },
     });
@@ -66,15 +66,15 @@ exports.getSessions = async (req, res) => {
 };
 
 exports.getSessionById = async (req, res) => {
-  try {
-    const userId = req.session.userId;
+  try { 
+    const userId = req.session?.userId; 
 
-    // Check if the user is authenticated
+    
     if (!userId) {
       return res.status(401).send("Unauthorized. Please log in.");
     }
 
-    res.sendFile(path.join(__dirname, '../htmls/addSession.html'));  // This line uses the path module
+    res.sendFile(path.join(__dirname, '../htmls/addSession.html'));  
   } catch (error) {
     console.error("Error retrieving session:", error);
     res.status(500).send("Error retrieving session");
@@ -84,18 +84,17 @@ exports.getSessionById = async (req, res) => {
 exports.deleteSession = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.session.userId;
+    const userId = req.session?.userId; 
 
     if (!userId) {
       return res.status(401).send("Unauthorized. Please log in.");
     }
 
-    // Delete all notes related to the session
     await prisma.note.deleteMany({
       where: { sessionId: id },
     });
 
-    // Now, delete the session
+
     await prisma.session.delete({
       where: { id: id },
     });
