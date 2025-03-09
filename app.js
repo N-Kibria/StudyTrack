@@ -1,6 +1,10 @@
+const db = require('./db');
 const express = require('express');
 const path = require('path');
 const session = require('express-session');
+const passport = require('passport');
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const LocalStrategy = require('passport-local').Strategy; 
 const fileUpload = require("express-fileupload");
 require('dotenv').config();
 
@@ -21,7 +25,7 @@ const reportRoutes= require('./routes/report.routes')
 const quizRoutes = require("./routes/quiz.routes");
 
 function ensureAuthenticated(req, res, next) {
-  const publicPaths = ['/', '/login', '/register'];
+  const publicPaths = ['/', '/login', '/register','/auth/google','/auth/google/callback'];
   if (publicPaths.includes(req.path) || req.session.isAuthenticated) {
       return next();
   }
@@ -34,12 +38,112 @@ app.use(session({
   saveUninitialized: true,
 }));
 
+app.use(passport.initialize());
+app.use(passport.session());
 
+passport.use(new GoogleStrategy({
+  clientID: process.env.GOOGLE_CLIENT_ID,
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  callbackURL: "http://localhost:3001/auth/google/callback"
+}, async (accessToken, refreshToken, profile, done) => {
+  try {
+    const user = await db.user.findUnique({
+      where: { email: profile.emails[0].value }
+    });
+
+    if (!user) {
+    
+      const newUser = await db.user.create({
+        data: {
+          
+          email: profile.emails[0].value,
+          password: null, 
+        }
+      });
+
+      newUser.isNewUser = true; 
+      return done(null, newUser);
+    }
+
+    return done(null, user);
+  } catch (err) {
+    return done(err, null);
+  }
+}));
+
+passport.use(new LocalStrategy({
+    usernameField: 'email', 
+    passwordField: 'password'
+  },
+  async (email, password, done) => {
+    try {
+      const user = await db.user.findUnique({
+        where: { email }
+      });
+
+      if (!user) {
+        return done(null, false, { message: 'Incorrect email.' });
+      }
+
+      if (!user.password) {
+        return done(null, false, { message: 'No password set. Please log in with Google.' });
+      }
+
+      const match = await bcrypt.compare(password, user.password);
+      if (!match) {
+        return done(null, false, { message: 'Incorrect password.' });
+      }
+
+      return done(null, user);
+    } catch (err) {
+      return done(err);
+    }
+  }
+));
+
+
+passport.serializeUser((user, done) => {
+  console.log("Serializing user:", user); 
+  done(null, user.email); 
+});
+
+passport.deserializeUser(async (email, done) => {
+  console.log("Deserializing email:", email); 
+  try {
+    const user = await db.user.findUnique({ where: { email } });
+    console.log("Deserialized user:", user); 
+    done(null, user);
+  } catch (err) {
+    console.error("Error deserializing user:", err);
+    done(err, null);
+  }
+});
+
+app.get('/auth/google',
+  passport.authenticate('google', { scope: ['profile', 'email'] })
+);
+
+app.get('/auth/google/callback',
+  passport.authenticate('google', { failureRedirect: '/login' }),
+  (req, res) => {
+    if (req.user) {
+      req.session.isAuthenticated = true;
+
+      if (req.user.isNewUser) {
+        res.redirect('/register'); 
+      } else {
+        res.redirect('/dashboard');
+      }
+    } else {
+      res.redirect('/login');
+    }
+  }
+);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(ensureAuthenticated);
-// Routes
+
 app.use('/register', registerRoutes);
 app.use('/login', loginRoutes);
 app.use( dashboardRoutes);
@@ -48,7 +152,7 @@ app.use(sessionRoutes);
 app.use(discussionRoutes);
 app.use(reportRoutes);
 app.use("/api", quizRoutes);
-// Root route to redirect to login page
+
 app.get('/', (req, res) => {
   res.redirect('/register');
 });
